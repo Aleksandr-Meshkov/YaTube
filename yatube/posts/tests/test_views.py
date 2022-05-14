@@ -1,7 +1,5 @@
-from cgitb import small
 import shutil
 import tempfile
-from urllib import response
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -238,7 +236,7 @@ class PostPagesTests(TestCase):
         """Автор может удалять посты """
         post_count = Post.objects.count()
         response = self.authorized_client.get(
-            reverse('posts:post_delete', args = (self.post.id,))
+            reverse('posts:post_delete', args=(self.post.id,))
         )
         self.assertEqual(Post.objects.count(), post_count - 1)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
@@ -247,10 +245,11 @@ class PostPagesTests(TestCase):
         """Гость не может удалить пост"""
         post_count = Post.objects.count()
         response = self.client.get(
-            reverse('posts:post_delete', args = (self.post.id,))
+            reverse('posts:post_delete', args=(self.post.id,))
         )
         self.assertEqual(Post.objects.count(), post_count)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
 
 class PaginatorViewsTest(TestCase):
     @classmethod

@@ -43,13 +43,15 @@ class PostModelTest(TestCase):
             ('posts:post_detail', (cls.post.id,), f'/posts/{cls.post.id}/'),
             ('posts:post_edit', (cls.post.id,), f'/posts/{cls.post.id}/edit/'),
             ('posts:post_create', None, '/create/'),
-            ('posts:add_comment', (cls.post.id,), f'/posts/{cls.post.id}/comment/'),
+            ('posts:add_comment', (cls.post.id,),
+             f'/posts/{cls.post.id}/comment/'),
             ('posts:follow_index', None, '/follow/'),
             ('posts:profile_follow', (cls.user.username,),
              f'/profile/{cls.user.username}/follow/'),
             ('posts:profile_unfollow', (cls.user.username,),
              f'/profile/{cls.user.username}/unfollow/'),
-            ('posts:post_delete', (cls.post.id,), f'/posts/{cls.post.id}/delete/'),
+            ('posts:post_delete', (cls.post.id,),
+             f'/posts/{cls.post.id}/delete/'),
         )
 
     def setUp(self):
@@ -66,7 +68,11 @@ class PostModelTest(TestCase):
                 target_url = (
                     f'{response_login}?next={reverse(name, args=arg)}'
                 )
-                if name in ['posts:post_edit', 'posts:post_create', 'posts:follow_index']:
+                if name in [
+                    'posts:post_edit',
+                    'posts:post_create',
+                    'posts:follow_index'
+                ]:
                     response = (
                         self.client.get(reverse(name, args=arg), follow=True)
                     )
