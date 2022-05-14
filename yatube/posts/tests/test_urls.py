@@ -30,7 +30,9 @@ class PostModelTest(TestCase):
             ('posts:profile', (cls.user.username,), 'posts/profile.html'),
             ('posts:post_detail', (cls.post.id,), 'posts/post_detail.html'),
             ('posts:post_edit', (cls.post.id,), 'posts/create_post.html'),
-            ('posts:post_create', None, 'posts/create_post.html')
+            ('posts:post_create', None, 'posts/create_post.html'),
+            ('posts:follow_index', None, 'posts/follow.html'),
+
         )
         cls.names_args_urls = (
             ('posts:index', None, '/'),
@@ -40,7 +42,14 @@ class PostModelTest(TestCase):
              f'/profile/{cls.user.username}/'),
             ('posts:post_detail', (cls.post.id,), f'/posts/{cls.post.id}/'),
             ('posts:post_edit', (cls.post.id,), f'/posts/{cls.post.id}/edit/'),
-            ('posts:post_create', None, '/create/')
+            ('posts:post_create', None, '/create/'),
+            ('posts:add_comment', (cls.post.id,), f'/posts/{cls.post.id}/comment/'),
+            ('posts:follow_index', None, '/follow/'),
+            ('posts:profile_follow', (cls.user.username,),
+             f'/profile/{cls.user.username}/follow/'),
+            ('posts:profile_unfollow', (cls.user.username,),
+             f'/profile/{cls.user.username}/unfollow/'),
+            ('posts:post_delete', (cls.post.id,), f'/posts/{cls.post.id}/delete/'),
         )
 
     def setUp(self):
@@ -57,12 +66,11 @@ class PostModelTest(TestCase):
                 target_url = (
                     f'{response_login}?next={reverse(name, args=arg)}'
                 )
-                if name in ['posts:post_edit', 'posts:post_create']:
+                if name in ['posts:post_edit', 'posts:post_create', 'posts:follow_index']:
                     response = (
                         self.client.get(reverse(name, args=arg), follow=True)
                     )
                     self.assertRedirects(response, target_url)
-
                 else:
                     response_name = self.client.get(reverse(name, args=arg))
                     self.assertEqual(response_name.status_code, HTTPStatus.OK)

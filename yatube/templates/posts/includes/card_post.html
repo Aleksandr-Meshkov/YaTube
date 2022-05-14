@@ -17,7 +17,7 @@
           <a href="{% url "posts:group_list" post.group.slug %}"> все записи группы  </a>
         {% else %}
           {% if not group %}
-            <span style="color: red"> У поста нет группы  </span>
+            <span style="color: blue"> У поста нет группы  </span>
           {% else %}
             Группа: {{ group.title }}
           {% endif %}  

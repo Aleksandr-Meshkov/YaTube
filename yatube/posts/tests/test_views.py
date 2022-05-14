@@ -1,5 +1,7 @@
+from cgitb import small
 import shutil
 import tempfile
+from urllib import response
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -60,7 +62,8 @@ class PostPagesTests(TestCase):
             ('posts:profile', (cls.user.username,), 'posts/profile.html'),
             ('posts:post_detail', (cls.post.id,), 'posts/post_detail.html'),
             ('posts:post_edit', (cls.post.id,), 'posts/create_post.html'),
-            ('posts:post_create', None, 'posts/create_post.html')
+            ('posts:post_create', None, 'posts/create_post.html'),
+            ('posts:follow_index', None, 'posts/follow.html'),
         )
 
     @classmethod
@@ -69,7 +72,6 @@ class PostPagesTests(TestCase):
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
 
     def setUp(self):
-        self.quest_client = Client()
         self.authorized_client = Client()
         self.authorized_client.force_login(self.user)
         self.test_client_not_author = Client()
@@ -85,6 +87,7 @@ class PostPagesTests(TestCase):
         self.assertEqual(first_object.group, self.group)
         self.assertEqual(first_object.pub_date, self.post.pub_date)
         self.assertEqual(first_object.image, self.post.image)
+        self.assertContains(response, '<img')
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -184,13 +187,18 @@ class PostPagesTests(TestCase):
     def test_follow_authorized_client(self):
         """User может подписываться и отписываться на авторов"""
         follow_count = Follow.objects.count()
-        self.test_client_not_author.get(
+        response = self.test_client_not_author.get(
             reverse('posts:profile_follow', args=(self.user.username,))
         )
         self.assertEqual(Follow.objects.count(), follow_count + 1)
-        self.test_client_not_author.get(
+        follow = Follow.objects.first()
+        self.assertEqual(follow.author, self.post.author)
+        self.assertEqual(follow.user.username, self.user_2.username)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+        response_un = self.test_client_not_author.get(
             reverse('posts:profile_unfollow', args=(self.user.username,))
         )
+        self.assertEqual(response_un.status_code, HTTPStatus.FOUND)
         self.assertEqual(Follow.objects.count(), follow_count)
 
     def test_follow_quest_client(self):
@@ -221,8 +229,28 @@ class PostPagesTests(TestCase):
         )
         first_object_other_client = response_other_client.context['page_obj']
         self.assertEqual(first_object.author, self.post.author)
+        self.assertEqual(first_object.text, self.post.text)
+        self.assertEqual(first_object.group, self.group)
+        self.assertEqual(first_object.image, self.post.image)
         self.assertEqual(len(first_object_other_client), 0)
 
+    def test_user_delete_posts(self):
+        """Автор может удалять посты """
+        post_count = Post.objects.count()
+        response = self.authorized_client.get(
+            reverse('posts:post_delete', args = (self.post.id,))
+        )
+        self.assertEqual(Post.objects.count(), post_count - 1)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+
+    def test_guest_not_delete_posts(self):
+        """Гость не может удалить пост"""
+        post_count = Post.objects.count()
+        response = self.client.get(
+            reverse('posts:post_delete', args = (self.post.id,))
+        )
+        self.assertEqual(Post.objects.count(), post_count)
+        self.assertEqual(response.status_code, HTTPStatus.FOUND)
 
 class PaginatorViewsTest(TestCase):
     @classmethod

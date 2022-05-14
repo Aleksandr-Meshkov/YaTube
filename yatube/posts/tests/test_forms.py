@@ -1,6 +1,5 @@
 import shutil
 import tempfile
-from xml.etree.ElementTree import Comment
 
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile

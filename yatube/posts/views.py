@@ -30,29 +30,24 @@ def group_posts(request, slug):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     post = author.posts.select_related('group').all()
-    if request.user.is_authenticated:
-        following = Follow.objects.filter(
+    following = request.user.is_authenticated and Follow.objects.filter(
             user=request.user, author=author
-        ).exists()
-    else:
-        following = False
+        )
     context = {
         'page_obj': paginator(request, post),
         'author': author,
-        'following': following,
-        'request.user': request.user
+        'following': following
     }
     return render(request, 'posts/profile.html', context)
 
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
-    comments = post.comments.all()
     form = CommentForm(request.POST or None)
     context = {
         'post': post,
         'form': form,
-        'comments': comments
+        'comments': post.comments.all()
     }
     return render(request, 'posts/post_detail.html', context)
 
@@ -63,7 +58,7 @@ def post_create(request):
         request.POST or None,
         files=request.FILES or None
     )
-    if form.is_valid() and request.method == "POST":
+    if form.is_valid():
         post = form.save(commit=False)
         post.author = request.user
         post.save()
@@ -74,20 +69,18 @@ def post_create(request):
 @login_required
 def post_edit(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
+    if request.user != post.author:
+        return redirect('posts:post_detail', post.pk)
     form = PostForm(
         request.POST or None,
         files=request.FILES or None,
         instance=post
     )
-    if request.user != post.author:
-        return redirect('posts:post_detail', post.pk)
     if form.is_valid():
         form.save()
         return redirect('posts:post_detail', post.pk)
     context = {
-        'post': post,
-        'form': form,
-        'is_edit': True,
+        'form': form
     }
     return render(request, 'posts/create_post.html', context)
 
@@ -118,16 +111,20 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     author = User.objects.get(username=username)
-    if author == request.user:
-        return redirect('posts:profile', username=username)
-    Follow.objects.get_or_create(user=request.user, author=author)
+    if author != request.user:
+        Follow.objects.get_or_create(user=request.user, author=author)
     return redirect('posts:profile', username=username)
 
 
 @login_required
 def profile_unfollow(request, username):
-    author = get_object_or_404(User, username=username)
-    subscription = Follow.objects.filter(user=request.user, author=author)
-    if subscription.exists():
-        subscription.delete()
+    Follow.objects.filter(
+        user=request.user, author__username=username
+    ).delete()
     return redirect('posts:profile', username=username)
+
+
+@login_required
+def post_delete(request, post_id):
+    Post.objects.filter(id=post_id).delete()
+    return redirect('posts:profile', username=request.user.username)

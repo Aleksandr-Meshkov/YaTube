@@ -13,11 +13,12 @@
           Дата публикации: {{ post.pub_date|date:"d E Y" }} 
         </li>
           <li class="list-group-item">
-            Группа: {{ post.group }}
-              {% if post.group %}
+            {% if post.group %}
+              Группа: {{ post.group }}
                 <a href="{% url 'posts:group_list' post.group.slug %}">
-              {% endif %}
-              все записи группы
+            {% else %}
+              <span style="color: blue">Этой публикации нет ни в одном сообществе.</span> 
+            {% endif %}
             </a>
           </li>
           <li class="list-group-item">
@@ -36,12 +37,16 @@
         <img class="card-img my-2" src="{{ im.url }}">
       {% endthumbnail %}
       <p>
-        {{ post.text }}
+        {{ post.text|linebreaks }}
       </p>
       {% if user == post.author %}
-      <a class="btn btn-primary" href="{% url 'posts:post_edit' post.id %}">
-        редактировать запись
-      </a>
+        <a class="btn btn-primary" href="{% url 'posts:post_edit' post.id %}">
+          редактировать запись
+        </a>
+        <a
+        <a class="btn btn-primary" href="{% url 'posts:post_delete' post.id %}">
+          Удалить пост
+        </a>
       {% endif %}     
     </article>
     {% include "includes/form_comment.html" %}
