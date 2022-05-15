@@ -63,7 +63,7 @@ class PostModelTest(TestCase):
     def test_urls_exists_at_desired_location(self):
         """Страницы доступны любому пользователю."""
         response_login = reverse('users:login')
-        for name, arg, _ in self.templates_args_names:
+        for name, arg, _ in self.names_args_urls:
             with self.subTest(name=name):
                 target_url = (
                     f'{response_login}?next={reverse(name, args=arg)}'
@@ -71,7 +71,11 @@ class PostModelTest(TestCase):
                 if name in [
                     'posts:post_edit',
                     'posts:post_create',
-                    'posts:follow_index'
+                    'posts:follow_index',
+                    'posts:add_comment',
+                    'posts:profile_follow',
+                    'posts:profile_unfollow',
+                    'posts:post_delete'
                 ]:
                     response = (
                         self.client.get(reverse(name, args=arg), follow=True)
@@ -82,11 +86,38 @@ class PostModelTest(TestCase):
                     self.assertEqual(response_name.status_code, HTTPStatus.OK)
 
     def test_urls_authorized_exists_at_desired_location(self):
-        """Страницы доступны авторизованному пользователю(автора)."""
-        for name, arg, _ in self.templates_args_names:
+        """Страницы доступны авторизованному пользователю(автору)."""
+        for name, arg, _ in self.names_args_urls:
             with self.subTest(name=name):
-                response = self.test_client_author.get(reverse(name, args=arg))
-                self.assertEqual(response.status_code, HTTPStatus.OK)
+                if name in [
+                    'posts:add_comment',
+                ]:
+                    response = self.test_client_author.get(
+                        reverse(name, args=arg)
+                    )
+                    self.assertRedirects(
+                        response, reverse(
+                            'posts:post_detail', args=(self.post.id,)
+                        )
+                    )
+                elif name in [
+                    'posts:profile_follow',
+                    'posts:profile_unfollow',
+                    'posts:post_delete'
+                ]:
+                    response = self.test_client_author.get(
+                        reverse(name, args=arg)
+                    )
+                    self.assertRedirects(
+                        response, reverse(
+                            'posts:profile', args=(self.user.username,)
+                        )
+                    )
+                else:
+                    response = self.test_client_author.get(
+                        reverse(name, args=arg)
+                    )
+                    self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_urls_not_exists_at_desired_location(self):
         """Страницa '/unnexisting_page/' не имеет нужного адреса"""
@@ -112,15 +143,35 @@ class PostModelTest(TestCase):
 
     def test_urls_exists_at_desired_location_for_not_author(self):
         """Страницы доступны авторизованному пользователю(не автору)."""
-        response_post = reverse('posts:post_detail', args=(self.post.id,))
-        for name, arg, _ in self.templates_args_names:
+        for name, arg, _ in self.names_args_urls:
             with self.subTest(name=name):
-                if name == 'posts:post_edit':
+                if name in [
+                    'posts:post_edit',
+                    'posts:add_comment'
+                ]:
                     response = (
                         self.test_client_not_author.get(
                             reverse(name, args=arg), follow=True)
                     )
-                    self.assertRedirects(response, response_post)
+                    self.assertRedirects(
+                        response, reverse(
+                            'posts:post_detail', args=(self.post.id,)
+                        )
+                    )
+                elif name in [
+                    'posts:profile_follow',
+                    'posts:profile_unfollow',
+                    'posts:post_delete'
+                ]:
+                    response = (
+                        self.test_client_not_author.get(
+                            reverse(name, args=arg), follow=True)
+                    )
+                    self.assertRedirects(
+                        response, reverse(
+                            'posts:profile', args=(self.user.username,)
+                        )
+                    )
                 else:
                     response_name = self.test_client_not_author.get(
                         reverse(name, args=arg)

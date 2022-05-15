@@ -191,7 +191,7 @@ class PostPagesTests(TestCase):
         self.assertEqual(Follow.objects.count(), follow_count + 1)
         follow = Follow.objects.first()
         self.assertEqual(follow.author, self.post.author)
-        self.assertEqual(follow.user.username, self.user_2.username)
+        self.assertEqual(follow.user, self.user_2)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         response_un = self.test_client_not_author.get(
             reverse('posts:profile_unfollow', args=(self.user.username,))

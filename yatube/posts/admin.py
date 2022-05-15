@@ -17,7 +17,19 @@ class GroupAdmin(admin.ModelAdmin):
     search_fields = ('title',)
 
 
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'post', 'author', 'text',)
+    list_filter = ('post',)
+    search_fields = ('post',)
+
+
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'user', 'author',)
+    list_filter = ('user',)
+    search_fields = ('user',)
+
+
 admin.site.register(Post, PostAdmin)
 admin.site.register(Group, GroupAdmin)
-admin.site.register(Comment)
-admin.site.register(Follow)
+admin.site.register(Comment, CommentAdmin)
+admin.site.register(Follow, FollowAdmin)

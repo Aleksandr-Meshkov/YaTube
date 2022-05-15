@@ -126,5 +126,7 @@ def profile_unfollow(request, username):
 
 @login_required
 def post_delete(request, post_id):
-    Post.objects.filter(id=post_id).delete()
-    return redirect('posts:profile', username=request.user.username)
+    post = get_object_or_404(Post, pk=post_id)
+    if post.author == request.user:
+        post.delete()
+    return redirect('posts:profile', username=post.author)

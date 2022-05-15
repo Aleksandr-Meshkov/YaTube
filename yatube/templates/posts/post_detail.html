@@ -14,12 +14,12 @@
         </li>
           <li class="list-group-item">
             {% if post.group %}
-              Группа: {{ post.group }}
-                <a href="{% url 'posts:group_list' post.group.slug %}">
+              <a href="{% url 'posts:group_list' post.group.slug %}">
+                Группа: {{ post.group }}
+              </a>
             {% else %}
               <span style="color: blue">Этой публикации нет ни в одном сообществе.</span> 
             {% endif %}
-            </a>
           </li>
           <li class="list-group-item">
             Автор: {{ post.author.username }}
