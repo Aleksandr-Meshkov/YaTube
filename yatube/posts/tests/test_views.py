@@ -80,12 +80,13 @@ class PostPagesTests(TestCase):
             first_object = response.context['post']
         else:
             first_object = response.context['page_obj'][0]
+
         self.assertEqual(first_object.text, self.post.text)
         self.assertEqual(first_object.author, self.user)
         self.assertEqual(first_object.group, self.group)
         self.assertEqual(first_object.pub_date, self.post.pub_date)
         self.assertEqual(first_object.image, self.post.image)
-        self.assertContains(response, '<img')
+        self.assertContains(response, '<img', 2)
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
